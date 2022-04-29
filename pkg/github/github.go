@@ -22,19 +22,17 @@ type oldHostContent struct {
 func getNewHost(hostUrl string) *newHostContent {
 	resp, err := http.Get(hostUrl)
 	if err != nil {
-		log.Println("println日志222sss")
 		log.Printf("%v", err)
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("println日志222dddddd")
 		log.Printf("%v", err)
 		os.Exit(1)
 	}
 	newContent := string(body)
-	var lastUpdate string
+	lastUpdate := ""
 	for _, line := range strings.Split(newContent, "\n") {
 		if strings.HasPrefix(line, "# Update time:") {
 			lastUpdate = strings.SplitN(line, ":", 2)[1]
@@ -53,7 +51,7 @@ func getOldContent(hostFilePath string) *oldHostContent {
 		os.Exit(1)
 	}
 	oldContent := strings.Split(string(content), "\n")
-	var hostStart int
+	hostStart := 0
 	var hostFinish int
 	var lastUpdate string
 	for idx, line := range oldContent {
@@ -82,8 +80,11 @@ func ScanHostAndSetToLocal() {
 	hostUrl := "https://raw.hellogithub.com/hosts"
 	newContent := getNewHost(hostUrl)
 
+	if newContent.lastUpdate == "" {
+		return
+	}
+
 	if oldContent.lastUpdate != newContent.lastUpdate {
-		// log.Printf("%v, %v", oldContent.lastUpdate, newContent.lastUpdate)
 		updateContent := ""
 		idx := 0
 		for idx < oldContent.hostStart {
